@@ -24,8 +24,7 @@ class Recipe(models.Model):
     )
     image = models.ImageField(
         verbose_name='Картинка',
-        upload_to='media/',
-        blank=True
+        upload_to='media/recipes/'
     )
     text = models.TextField(
         verbose_name='Описание'
@@ -85,7 +84,7 @@ class Ingredient(models.Model):
         max_length=256,
         unique=True
     )
-    unit = models.CharField(
+    measurment_unit = models.CharField(
         verbose_name='Единица измерения',
         max_length=16
     )
@@ -107,7 +106,7 @@ class IngridientRecipe(models.Model):
         Recipe,
         on_delete=models.CASCADE
     )
-    quantity = models.IntegerField(
+    amount = models.IntegerField(
         validators=(
             MinValueValidator(0, message=MIN_VALUE_ERROR),
         ),
