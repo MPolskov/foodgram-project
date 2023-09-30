@@ -1,21 +1,26 @@
 from django.shortcuts import get_object_or_404
 
-from rest_framework import mixins
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
 from rest_framework.viewsets import GenericViewSet, ModelViewSet, ReadOnlyModelViewSet
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, SAFE_METHODS
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.decorators import action
 
 from recipes.models import (
     Ingredient,
     Tag,
     Recipe,
+    Favourites,
 )
 from .serializers import (
     IngredientsSerializer,
     TagsSerializer,
-    RecipeSerializer,
+    RecipeReadSerializer,
+    RecipeWriteSerializer,
+    RecipeInFavoriteSerializer,
 
 )
 
@@ -35,25 +40,50 @@ class TagsViewSet(ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    # queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
+    queryset = Recipe.objects.all()
     permission_classes = (AllowAny,)
     pagination_class = LimitOffsetPagination
 
-    def get_queryset(self):
-        queryset = Recipe.objects.all()
-        user = self.request.user
-        if self.kwargs.get('is_favorited') == 1:
-            queryset = user.subscriber.all()
-        return queryset
-    #     review_id = self.kwargs.get('review_id')
-    #     title_id = self.kwargs.get('title_id')
-    #     review = get_object_or_404(Review, id=review_id, title=title_id)
-    #     return review.comments.all()
+    # def get_queryset(self):
+    #     queryset = Recipe.objects.all()
+    #     user = self.request.user
+    #     if self.kwargs.get('is_favorited') == 1:
+    #         queryset = user.favorite.all()
+    #     return queryset
+    
+    def get_serializer_class(self):
+        if self.request.method in SAFE_METHODS:
+            return RecipeReadSerializer
+        return RecipeWriteSerializer
+    
+    @action(
+        methods=['post', 'delete'],
+        detail=True,
+        # permission_classes=[permissions.IsAuthenticated]
+    )
+    def favorite(self, request, pk):
+        user = request.user
+        if request.method == 'POST':
+            if user.subscriber.filter(favorite=pk).exists():
+                return Response(
+                    {'errors': 'Рецепт уже добавлен в избранное!'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            recipe = get_object_or_404(Recipe, id=pk)
+            subscription = Favourites.objects.create(
+                user=user,
+                favorite=recipe
+            )
+            serializer = RecipeInFavoriteSerializer(subscription)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        recipe = user.subscriber.filter(favorite=pk)
+        if recipe:
+            recipe.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(
+                {'errors': 'В избранном такого рецепта нет!'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-        # title_id = self.kwargs.get('title_id')
-        # review_id = self.kwargs.get('review_id')
-        # review = get_object_or_404(Review, id=review_id, title=title_id)
-        # serializer.save(author=self.request.user, review=review)

@@ -31,12 +31,12 @@ class Recipe(models.Model):
     )
     ingredients = models.ManyToManyField(
         'Ingredient',
-        through='IngridientRecipe',
+        through='IngredientInRecipe',
         verbose_name='Ингредиенты'
     )
     tags = models.ManyToManyField(
         'Tag',
-        through='TagRecipe',
+        # through='TagRecipe',
         verbose_name='Теги'
     )
     cooking_time = models.IntegerField(
@@ -82,7 +82,7 @@ class Ingredient(models.Model):
     name = models.CharField(
         verbose_name='Название',
         max_length=256,
-        unique=True
+        # unique=True
     )
     measurment_unit = models.CharField(
         verbose_name='Единица измерения',
@@ -97,14 +97,14 @@ class Ingredient(models.Model):
         return self.name
 
 
-class IngridientRecipe(models.Model):
+class IngredientInRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE  # TODO: выбрать правильный метод при удалении
     )
     recipe = models.ForeignKey(
         Recipe,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE   # TODO: выбрать правильный метод при удалении
     )
     amount = models.IntegerField(
         validators=(
@@ -124,31 +124,31 @@ class IngridientRecipe(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.recipe} {self.ingredient} {self.quantity}'
+        return f'{self.recipe} {self.ingredient} {self.amount}'
 
 
-class TagRecipe(models.Model):
-    tag = models.ForeignKey(
-        Tag,
-        on_delete=models.CASCADE
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE
-    )
+# class TagRecipe(models.Model):
+#     tag = models.ForeignKey(
+#         Tag,
+#         on_delete=models.CASCADE
+#     )
+#     recipe = models.ForeignKey(
+#         Recipe,
+#         on_delete=models.CASCADE
+#     )
 
-    class Meta:
-        verbose_name = 'Рецепты и теги'
-        verbose_name_plural = verbose_name
-        constraints = [
-            models.UniqueConstraint(
-                fields=['tag', 'recipe'],
-                name='unique_tag_recipe'
-            )
-        ]
+#     class Meta:
+#         verbose_name = 'Рецепты и теги'
+#         verbose_name_plural = verbose_name
+#         constraints = [
+#             models.UniqueConstraint(
+#                 fields=['tag', 'recipe'],
+#                 name='unique_tag_recipe'
+#             )
+#         ]
 
-    def __str__(self):
-        return f'{self.tag} {self.recipe}'
+#     def __str__(self):
+#         return f'{self.tag} {self.recipe}'
 
 
 class Favourites(models.Model):
