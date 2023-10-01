@@ -3,6 +3,7 @@ djangorestframework==3.12.4
 djoser==2.1.0
 djangorestframework-simplejwt==4.7.2
 django-extra-fields==3.0.2
+django-filter==23.3
 pillow==10.0.1
 psycopg2==2.9.8
 

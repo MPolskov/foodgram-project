@@ -157,7 +157,7 @@ class Favourites(models.Model):
         on_delete=models.CASCADE,
         related_name='subscriber',
     )
-    favorite = models.ForeignKey(
+    recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
         related_name='favorite',
@@ -166,7 +166,7 @@ class Favourites(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'favorite'],
+                fields=['user', 'recipe'],
                 name='unique_user_favorite'
             )
         ]

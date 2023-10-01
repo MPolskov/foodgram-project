@@ -1,129 +1,82 @@
-# from rest_framework import serializers
-# from django.core import validators
-# from rest_framework.validators import UniqueValidator
-# from djoser.serializers import TokenCreateSerializer
-# from django.contrib.auth import authenticate
-# from rest_framework import serializers
-# from djoser.conf import settings
+from rest_framework import serializers, status
+from django.core import validators
+from rest_framework.validators import UniqueTogetherValidator
+from djoser.serializers import UserSerializer
+from rest_framework.exceptions import ValidationError
 
-# from djoser.compat import get_user_email_field_name
-
-# from .models import CustomUser
-
-# UNIQ_NAME_ERROR = 'Выберите другое имя пользователя'
-# ERROR_REGEX_MSG = 'Имя пользователя содержит недопустимые символы'
-# REGEX = r'^[\w.@+-]+\Z'
+from .models import Follow
+from api.serializers import RecipeAddToSerializer
 
 
-# from djoser.serializers import UserCreateSerializer
+ERROR_MSG_FOLLOW_YOURSELF = 'Вы не можете подписаться на самого себя!'
 
 
+class CustomUserSerializer(UserSerializer):
+    is_subscribed = serializers.SerializerMethodField(
+        method_name='get_is_subscribed'
+    )
 
-# class UserCreateSerializer(UserCreateSerializer):
-#     class Meta:
-#         model = CustomUser
-#         fields = ("id", "email", "username", "first_name", "last_name", "password")
+    class Meta(UserSerializer.Meta):
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed'
+        )
 
-
-# class UserSerializer(serializers.ModelSerializer):
-
-#     class Meta:
-#         model = User
-#         fields = (
-#             'username',
-#             'id',
-#             'email',
-#             'first_name',
-#             'last_name'
-#         )
-
-
-# class UserCreateSerializer(serializers.Serializer):
-#     email = serializers.EmailField(
-#         max_length=User.EMAIL_MAX_LENGTH,
-#         required=True,
-#         validators=(
-#             UniqueValidator(
-#                 queryset=User.objects.all()
-#             ),
-#         )
-#     )
-#     username = serializers.RegexField(
-#         regex=REGEX,
-#         max_length=User.USERNAME_MAX_LENGTH,
-#         required=True,
-#         validators=(
-#             validators.RegexValidator(
-#                 REGEX,
-#                 ERROR_REGEX_MSG
-#             ),
-#             UniqueValidator(
-#                 queryset=User.objects.all()
-#             )
-#         )
-#     )
-#     first_name = serializers.CharField(
-#         max_length=User.USERNAME_MAX_LENGTH,
-#         required=True,
-#     )
-#     last_name = serializers.CharField(
-#         max_length=User.USERNAME_MAX_LENGTH,
-#         required=True,
-#     )
-#     password = serializers.RegexField(
-#         regex=REGEX,
-#         max_length=User.USERNAME_MAX_LENGTH,
-#         required=True,
-#         validators=(
-#             validators.RegexValidator(
-#                 REGEX,
-#                 ERROR_REGEX_MSG),
-#         )
-#     )
-
-#     class Meta:
-#         model = User
-#         fields = (
-#             'username',
-#             "id",
-#             'email',
-#             'first_name',
-#             'last_name'
-#         )
-
-#     def validate(self, data):
-#         if data['username'] == 'me':
-#             raise serializers.ValidationError(
-#                 UNIQ_NAME_ERROR
-#             )
-        
-#         return data
-    
-
-# class UserTokenSerializer(serializers.Serializer):
-#     email = serializers.EmailField(
-#         max_length=User.EMAIL_MAX_LENGTH,
-#         required=True,
-#     )
-#     password = serializers.CharField(required=True)
-
-#     class Meta:
-#         model = User
-#         fields = ('password', 'email')
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return Follow.objects.filter(user=user, following=obj).exists()
 
 
-# class CustomTokenCreateSerializer(TokenCreateSerializer):
+class FollowSerializer(CustomUserSerializer):
+    recipes = serializers.SerializerMethodField(
+        method_name='get_recipes'
+    )
+    recipes_count = serializers.SerializerMethodField(
+        method_name='get_recipes_count'
+    )
 
-#     def validate(self, attrs):
-#         password = attrs.get("password")
-#         params = {settings.LOGIN_FIELD: attrs.get(settings.LOGIN_FIELD)}
-#         self.user = authenticate(
-#             request=self.context.get("request"), **params, password=password
-#         )
-#         if not self.user:
-#             self.user = User.objects.filter(**params).first()
-#             if self.user and not self.user.check_password(password):
-#                 self.fail("invalid_credentials")
-#         if self.user:
-#             return attrs
-#         self.fail("invalid_credentials")
+    def get_recipes(self, obj):
+        recipes = obj.recipe.all()
+        if 'recipes_limit' in self.context.get('request').GET:
+            recipes_limit = self.context.get('request').GET['recipes_limit']
+            recipes = recipes[:int(recipes_limit)]
+        serializer = RecipeAddToSerializer(recipes, many=True, read_only=True)
+        return serializer.data
+
+    def get_recipes_count(self, obj):
+        return obj.recipe.count()
+
+    def validate(self, data):
+        user = self.context.get('request').user
+        author = self.instance
+        if user == author:
+            raise ValidationError(
+                ERROR_MSG_FOLLOW_YOURSELF,
+                code=status.HTTP_400_BAD_REQUEST
+            )
+
+        return data
+
+    class Meta(CustomUserSerializer.Meta):
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count'
+        )
+        read_only_fields = (
+            'email',
+            'username',
+            'first_name',
+            'last_name'
+        )

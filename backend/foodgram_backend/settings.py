@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 
-from datetime import timedelta
+# from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'django_filters',
     'djoser',
     'users.apps.UsersConfig',
     'recipes.apps.RecipesConfig',
@@ -153,8 +154,8 @@ REST_FRAMEWORK = {
 DJOSER = {
     "LOGIN_FIELD": "email",
     "SERIALIZERS": {
-        "user": "djoser.serializers.UserSerializer",
-        "current_user": "djoser.serializers.UserSerializer",
+        "user": "users.serializers.CustomUserSerializer",
+        "current_user": "users.serializers.CustomUserSerializer",
         "user_delete": "djoser.serializers.UserSerializer",
     },
 }
