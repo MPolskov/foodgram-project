@@ -1,14 +1,13 @@
 from rest_framework import serializers, status
-from django.core import validators
-from rest_framework.validators import UniqueTogetherValidator
 from djoser.serializers import UserSerializer
 from rest_framework.exceptions import ValidationError
 
 from .models import Follow
-from api.serializers import RecipeAddToSerializer
-
-
-ERROR_MSG_FOLLOW_YOURSELF = 'Вы не можете подписаться на самого себя!'
+from .errors_msg import (
+    ERROR_MSG_FOLLOW_YOURSELF,
+    ERROR_MSG_DUB_FOLLOW
+)
+from api.serializers import RecipeCutSerializer
 
 
 class CustomUserSerializer(UserSerializer):
@@ -46,7 +45,7 @@ class FollowSerializer(CustomUserSerializer):
         if 'recipes_limit' in self.context.get('request').GET:
             recipes_limit = self.context.get('request').GET['recipes_limit']
             recipes = recipes[:int(recipes_limit)]
-        serializer = RecipeAddToSerializer(recipes, many=True, read_only=True)
+        serializer = RecipeCutSerializer(recipes, many=True, read_only=True)
         return serializer.data
 
     def get_recipes_count(self, obj):
@@ -58,6 +57,11 @@ class FollowSerializer(CustomUserSerializer):
         if user == author:
             raise ValidationError(
                 ERROR_MSG_FOLLOW_YOURSELF,
+                code=status.HTTP_400_BAD_REQUEST
+            )
+        if user.follower.filter(following=author).exists():
+            raise ValidationError(
+                ERROR_MSG_DUB_FOLLOW,
                 code=status.HTTP_400_BAD_REQUEST
             )
 

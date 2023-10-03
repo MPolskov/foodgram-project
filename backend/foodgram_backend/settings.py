@@ -158,4 +158,8 @@ DJOSER = {
         "current_user": "users.serializers.CustomUserSerializer",
         "user_delete": "djoser.serializers.UserSerializer",
     },
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
+        'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
+    },
 }

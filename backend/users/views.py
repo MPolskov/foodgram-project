@@ -1,18 +1,21 @@
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
-from rest_framework import mixins, viewsets, status
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from django.shortcuts import get_object_or_404
-from django.contrib.auth import get_user_model
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly
+)
 
 from api.pagination import CustomPagination
-from .serializers import FollowSerializer
+from .errors_msg import ERROR_MSG_DELETE_FOLLOW
 from .models import Follow
+from .serializers import FollowSerializer
+
 
 User = get_user_model()
-
-ERROR_MSG_ADD_FOLLOW = 'Вы уже подписаны на этого пользователя!'
-ERROR_MSG_DELETE_FOLLOW = 'Вы не подписаны на этого пользователя!'
 
 
 class CustomUserViewSet(UserViewSet):
@@ -20,16 +23,17 @@ class CustomUserViewSet(UserViewSet):
 
     @action(
         detail=True,
-        methods=['post', 'delete']
+        methods=['post', 'delete'],
+        permission_classes=(IsAuthenticated,)
     )
     def subscribe(self, request, id):
         user = self.request.user
         if request.method == 'POST':
-            if user.follower.filter(following=id).exists():
-                return Response(
-                    {'errors': ERROR_MSG_ADD_FOLLOW},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            # if user.follower.filter(following=id).exists():
+            #     return Response(
+            #         {'errors': ERROR_MSG_ADD_FOLLOW},
+            #         status=status.HTTP_400_BAD_REQUEST
+            #     )
             author = get_object_or_404(User, id=id)
             serializer = FollowSerializer(
                 author,
@@ -51,11 +55,11 @@ class CustomUserViewSet(UserViewSet):
                 {'errors': ERROR_MSG_DELETE_FOLLOW},
                 status=status.HTTP_400_BAD_REQUEST
             )
-    
+
     @action(
         detail=False,
         methods=['get'],
-        pagination_class=CustomPagination
+        permission_classes=(IsAuthenticated,)
     )
     def subscriptions(self, request):
         user = self.request.user
