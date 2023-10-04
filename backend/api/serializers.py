@@ -11,7 +11,15 @@ from recipes.models import (
     Tag,
     Favourites,
     ShoppingCart,
-
+)
+from .errors_msg import (
+    ERROR_MSG_EMPTY_INGR,
+    ERROR_MSG_EMPTY_TAG,
+    ERROR_MSG_NON_EXISTING_INGR,
+    ERROR_MSG_DUB_INGR,
+    ERROR_MSG_ZERO_AMOUNT_INGR,
+    ERROR_MSG_DUB_TAG,
+    ERROR_MSG_NON_IMAGE,
 )
 
 User = get_user_model()
@@ -45,7 +53,7 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientsWriteSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField()
+    id = serializers.IntegerField(write_only=True)
     amount = serializers.IntegerField(write_only=True)
 
     class Meta:
@@ -57,6 +65,11 @@ class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     tags = TagsSerializer(many=True, read_only=True)
 
+    def validate_image(self, value):
+        if not value:
+            raise serializers.ValidationError(ERROR_MSG_NON_IMAGE)
+        return value
+    
     class Meta:
         model = Recipe
         fields = (
@@ -109,6 +122,28 @@ class RecipeWriteSerializer(RecipeSerializer):
         queryset=Tag.objects.all(),
         many=True
     )
+
+    def validate_ingredients(self, value):
+        if not value:
+            raise serializers.ValidationError(ERROR_MSG_EMPTY_INGR)
+        ingredients = set([item['id'] for item in value])
+        if len(ingredients) < len(value):
+            raise serializers.ValidationError(ERROR_MSG_DUB_INGR)
+        for item in value:
+            ingredient = Ingredient.objects.filter(id=item['id'])
+            if not ingredient.exists():
+                raise serializers.ValidationError(ERROR_MSG_NON_EXISTING_INGR)
+            if int(item['amount']) < 1:
+                raise serializers.ValidationError(ERROR_MSG_ZERO_AMOUNT_INGR)
+        return value
+    
+    def validate_tags(self, value):
+        if not value:
+            raise serializers.ValidationError(ERROR_MSG_EMPTY_TAG)
+        tags = set(value)
+        if len(tags) < len(value):
+            raise serializers.ValidationError(ERROR_MSG_DUB_TAG)
+        return value
 
     def _add_ingredients_in_recipe(self, ingredients, recipe):
         for item in ingredients:

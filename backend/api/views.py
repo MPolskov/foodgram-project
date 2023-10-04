@@ -39,19 +39,21 @@ from .serializers import (
 
 
 class IngredientsViewSet(ReadOnlyModelViewSet):
-    queryset = Ingredient.objects.all()
-    # permission_classes = (IsAdminOrReadOnly,)
     serializer_class = IngredientsSerializer
     filter_backends = (SearchFilter,)
     search_fields = ('^name',)
-    # http_method_names = ['get']
+
+    def get_queryset(self):
+        queryset = Ingredient.objects.all()
+        name = self.request.query_params.get('name')
+        if name is not None:
+            queryset = queryset.filter(name__istartswith=name)
+        return queryset
 
 
 class TagsViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
-    # permission_classes = (IsAdminOrReadOnly,)
     serializer_class = TagsSerializer
-    # http_method_names = ['get']
 
 
 class RecipeViewSet(ModelViewSet):

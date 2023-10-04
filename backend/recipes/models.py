@@ -8,6 +8,7 @@ from django.core.validators import (
 User = get_user_model()
 
 MIN_VALUE_ERROR = 'Значение не может быть меньше единицы'
+NAME_LENGHT = 200
 
 
 class Recipe(models.Model):
@@ -20,7 +21,7 @@ class Recipe(models.Model):
     )
     name = models.CharField(
         verbose_name='Название',
-        max_length=256
+        max_length=NAME_LENGHT
     )
     image = models.ImageField(
         verbose_name='Картинка',
@@ -56,7 +57,7 @@ class Recipe(models.Model):
 class Tag(models.Model):
     name = models.CharField(
         verbose_name='Название',
-        max_length=256,
+        max_length=NAME_LENGHT,
         unique=True
     )
     color = models.CharField(
@@ -80,7 +81,7 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     name = models.CharField(
         verbose_name='Название',
-        max_length=256,
+        max_length=NAME_LENGHT,
         # unique=True
     )
     measurement_unit = models.CharField(
