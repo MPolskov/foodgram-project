@@ -26,8 +26,7 @@ from recipes.models import (
 )
 from .pagination import CustomPagination
 from .permissions import (
-    IsAdminOrReadOnly,
-    IsAuthorOrReadOnly
+    IsAuthorOrAdminOrReadOnly
 )
 from .serializers import (
     IngredientsSerializer,
@@ -58,7 +57,7 @@ class TagsViewSet(ReadOnlyModelViewSet):
 
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
-    permission_classes = (IsAuthorOrReadOnly | IsAdminOrReadOnly,)
+    permission_classes = (IsAuthorOrAdminOrReadOnly,)
     pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilterSet
@@ -91,7 +90,7 @@ class RecipeViewSet(ModelViewSet):
         else:
             return Response(
                 {'errors': error_msg},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_404_NOT_FOUND
             )
 
     @action(

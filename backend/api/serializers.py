@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from rest_framework import serializers
+from rest_framework import serializers, validators
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 
@@ -20,6 +20,7 @@ from .errors_msg import (
     ERROR_MSG_ZERO_AMOUNT_INGR,
     ERROR_MSG_DUB_TAG,
     ERROR_MSG_NON_IMAGE,
+    ERROR_MSG_EMPTY
 )
 
 User = get_user_model()
@@ -55,6 +56,9 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
 class RecipeIngredientsWriteSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(write_only=True)
     amount = serializers.IntegerField(write_only=True)
+
+    def validate(self, attrs):
+        return super().validate(attrs)
 
     class Meta:
         model = Ingredient
@@ -165,15 +169,15 @@ class RecipeWriteSerializer(RecipeSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
+        try:
+            ingredients = validated_data.pop('ingredients')
+            tags = validated_data.pop('tags')
+        except KeyError as error:
+            raise serializers.ValidationError(ERROR_MSG_EMPTY.format(error))
         instance = super().update(instance, validated_data)
-        if tags:
-            instance.tags.clear()
-            instance.tags.set(tags)
-        if ingredients:
-            instance.ingredients.clear()
-            self._add_ingredients_in_recipe(ingredients, instance)
+        instance.tags.set(tags)
+        instance.ingredients.clear()
+        self._add_ingredients_in_recipe(ingredients, instance)
         instance.save()
         return instance
 

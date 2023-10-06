@@ -2,6 +2,7 @@ ERROR_MSG_ADD_FAVORITE = 'Рецепт уже добавлен в избранн
 ERROR_MSG_REMOVE_FAVORITE = 'В избранном нет такого рецепта!'
 ERROR_MSG_ADD_CART = 'Рецепт уже добавлен в список покупок!'
 ERROR_MSG_REMOVE_CART = 'В списке покупок нет такого рецепта!'
+ERROR_MSG_EMPTY = 'Поле {} не может быть пустым!'
 ERROR_MSG_EMPTY_INGR = 'Должен быть хотя бы один ингредиент!'
 ERROR_MSG_NON_EXISTING_INGR = 'Ингридиент остуствует в базе данных!'
 ERROR_MSG_EMPTY_TAG = 'Должен быть хотя бы один тег!'

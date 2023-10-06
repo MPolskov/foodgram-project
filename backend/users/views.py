@@ -21,20 +21,19 @@ User = get_user_model()
 class CustomUserViewSet(UserViewSet):
     pagination_class = CustomPagination
 
+    def get_permissions(self):
+        if self.action in ['me', 'subscribe', 'subscriptions']:
+            self.permission_classes = (IsAuthenticated,)
+        return super().get_permissions()
+
     @action(
         detail=True,
-        methods=['post', 'delete'],
-        permission_classes=(IsAuthenticated,)
+        methods=['post', 'delete']
     )
     def subscribe(self, request, id):
         user = self.request.user
+        author = get_object_or_404(User, id=id)
         if request.method == 'POST':
-            # if user.follower.filter(following=id).exists():
-            #     return Response(
-            #         {'errors': ERROR_MSG_ADD_FOLLOW},
-            #         status=status.HTTP_400_BAD_REQUEST
-            #     )
-            author = get_object_or_404(User, id=id)
             serializer = FollowSerializer(
                 author,
                 data=request.data,
@@ -53,13 +52,12 @@ class CustomUserViewSet(UserViewSet):
         else:
             return Response(
                 {'errors': ERROR_MSG_DELETE_FOLLOW},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_404_NOT_FOUND
             )
 
     @action(
         detail=False,
-        methods=['get'],
-        permission_classes=(IsAuthenticated,)
+        methods=['get']
     )
     def subscriptions(self, request):
         user = self.request.user
