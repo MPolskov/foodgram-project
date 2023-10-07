@@ -17,10 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    data_dir = os.path.join(settings.STATICFILES_DIRS[0], 'data')
+    data_dir = settings.LOAD_DATA_ROOT
     help = (
         'Загрузка в базу тестовых данных из файлов .csv в папке '
-        f'settings.STATICFILES_DIRS = "{data_dir}"'
+        f'"{data_dir}"'
     )
     MODELS = {
         Ingredient: {'filename': 'ingredients.csv', 'short': 'i'},
@@ -47,7 +47,8 @@ class Command(BaseCommand):
             self.args_list += (full,)
 
     def get_rel_item(self, model, row):
-        """Извлечение объектов из связанных моделей."""
+        '''Извлечение объектов из связанных моделей.'''
+
         exclude_models = (IngredientInRecipe,)
         exclude_fields = ('ingredient_id', 'recipe_id',)
 
@@ -60,7 +61,8 @@ class Command(BaseCommand):
                 row[column] = rel_item
 
     def load_csv(self, model, filename):
-        """Загрузка объектов из .csv файла."""
+        '''Загрузка объектов из .csv файла.'''
+
         file = os.path.join(self.data_dir, filename)
         if not os.path.isfile(file):
             raise FileNotFoundError(MSG_NOTFOUND.format(file))
