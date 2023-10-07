@@ -1,15 +1,11 @@
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
-# class IsAdminOrReadOnly(BasePermission):
-
-#     def has_permission(self, request, view):
-#         return (request.method in SAFE_METHODS
-#                 or request.user.role == 'admin'
-#                 or request.user.is_staff)
-
-
 class IsAuthorOrAdminOrReadOnly(BasePermission):
+    '''
+    Разрешение на создание, изменение, удаление
+    для автора и администратора. Чтение доступно всем.
+    '''
 
     def has_permission(self, request, view):
         return (request.method in SAFE_METHODS

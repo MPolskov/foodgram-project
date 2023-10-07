@@ -38,6 +38,8 @@ from .serializers import (
 
 
 class IngredientsViewSet(ReadOnlyModelViewSet):
+    '''Класс представления для ингредиентов.'''
+
     serializer_class = IngredientsSerializer
     filter_backends = (SearchFilter,)
     search_fields = ('^name',)
@@ -51,11 +53,15 @@ class IngredientsViewSet(ReadOnlyModelViewSet):
 
 
 class TagsViewSet(ReadOnlyModelViewSet):
+    '''Клас представления для тегов.'''
+
     queryset = Tag.objects.all()
     serializer_class = TagsSerializer
 
 
 class RecipeViewSet(ModelViewSet):
+    '''Класс представления для рецептов.'''
+
     queryset = Recipe.objects.all()
     permission_classes = (IsAuthorOrAdminOrReadOnly,)
     pagination_class = CustomPagination
@@ -68,13 +74,15 @@ class RecipeViewSet(ModelViewSet):
             return RecipeReadSerializer
         return RecipeWriteSerializer
 
-    def _add_to(self, user, model, pk, error_msg):
-        if model.objects.filter(user=user, recipe__id=pk).exists():
+    def _add_to(self, user, model, recipe, error_msg):
+        '''Вспомогательная функция для добавления рецепта
+        в избранное/список покупок.'''
+
+        if model.objects.filter(user=user, recipe=recipe).exists():
             return Response(
                 {'errors': error_msg},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        recipe = get_object_or_404(Recipe, id=pk)
         serializer = RecipeCutSerializer(recipe)
         model.objects.create(
             user=user,
@@ -82,15 +90,18 @@ class RecipeViewSet(ModelViewSet):
         )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def _remove_from(self, user, model, pk, error_msg):
-        recipe = model.objects.filter(user=user, recipe__id=pk)
-        if recipe.exists():
-            recipe.delete()
+    def _remove_from(self, user, model, recipe, error_msg):
+        '''Вспомогательная функция для удаления рецепта
+        из избранного/списка покупок.'''
+
+        obj = model.objects.filter(user=user, recipe=recipe)
+        if obj.exists():
+            obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             return Response(
                 {'errors': error_msg},
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_400_BAD_REQUEST
             )
 
     @action(
@@ -99,18 +110,21 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def favorite(self, request, pk):
+        '''Action добавления рецепта в избранное.'''
+
         user = request.user
+        recipe = get_object_or_404(Recipe, id=pk)
         if request.method == 'POST':
             return self._add_to(
                 user,
                 Favourites,
-                pk,
+                recipe,
                 ERROR_MSG_ADD_FAVORITE
             )
         return self._remove_from(
             user,
             Favourites,
-            pk,
+            recipe,
             ERROR_MSG_REMOVE_FAVORITE
         )
 
@@ -120,18 +134,21 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def shopping_cart(self, request, pk):
+        '''Action добавления рецепта в список покупок.'''
+
         user = request.user
+        recipe = get_object_or_404(Recipe, id=pk)
         if request.method == 'POST':
             return self._add_to(
                 user,
                 ShoppingCart,
-                pk,
+                recipe,
                 ERROR_MSG_ADD_CART
             )
         return self._remove_from(
             user,
             ShoppingCart,
-            pk,
+            recipe,
             ERROR_MSG_REMOVE_CART
         )
 
@@ -141,6 +158,8 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
+        '''Action для скачивания ингредиентов из списка покупок.'''
+
         shopping_cart = request.user.buyer.all()
         recipes = [obj.recipe.id for obj in shopping_cart]
         ingredients_list = (

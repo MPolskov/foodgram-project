@@ -4,11 +4,12 @@ from django.core.validators import RegexValidator
 
 
 class User(AbstractUser):
+    '''Модель пользователя.'''
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username", "first_name", "last_name"]
 
-    USERNAME_MAX_LENGTH = 150
+    DEFAULT_MAX_LENGTH = 150
     EMAIL_MAX_LENGTH = 254
 
     ADMIN = 'admin'
@@ -21,14 +22,13 @@ class User(AbstractUser):
 
     username = models.CharField(
         'Логин',
-        max_length=USERNAME_MAX_LENGTH,
+        max_length=DEFAULT_MAX_LENGTH,
         unique=True,
         validators=([RegexValidator(regex=r'^[\w.@+-]+\Z')])
     )
-    # TODO: доработать!
     password = models.CharField(
         'Пароль',
-        max_length=150,
+        max_length=DEFAULT_MAX_LENGTH,
         validators=([RegexValidator(regex=r'^[\w.@+-]+\Z')])
     )
     email = models.EmailField(
@@ -38,12 +38,12 @@ class User(AbstractUser):
     )
     first_name = models.CharField(
         'Имя',
-        max_length=USERNAME_MAX_LENGTH,
+        max_length=DEFAULT_MAX_LENGTH,
         validators=([RegexValidator(regex=r'^[\w.@+-]+\Z')])
     )
     last_name = models.CharField(
         'Фамилия',
-        max_length=USERNAME_MAX_LENGTH,
+        max_length=DEFAULT_MAX_LENGTH,
         validators=([RegexValidator(regex=r'^[\w.@+-]+\Z')])
     )
     role = models.CharField(
@@ -69,6 +69,8 @@ class User(AbstractUser):
 
 
 class Follow(models.Model):
+    '''Модель подписки на автора.'''
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

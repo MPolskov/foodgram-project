@@ -7,7 +7,6 @@ from django.db.models.fields import related
 from django.conf import settings
 
 from recipes.models import Ingredient, IngredientInRecipe
-# from users.models import User
 
 MSG_NOTFOUND = '{0} - файл не найден!'
 MSG_SKIP = '{0}: Пропущено! База данных содержит объекты.'
@@ -26,18 +25,6 @@ class Command(BaseCommand):
     MODELS = {
         Ingredient: {'filename': 'ingredients.csv', 'short': 'i'},
     }
-
-    def __init__(self, *args, **kwargs) -> None:
-        """Колоризация логера."""
-        logging.addLevelName(
-            logging.WARNING,
-            "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.WARNING)
-        )
-        logging.addLevelName(
-            logging.ERROR,
-            "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.ERROR)
-        )
-        super().__init__(*args, **kwargs)
 
     def add_arguments(self, parser):
         self.args_list = ('all',)

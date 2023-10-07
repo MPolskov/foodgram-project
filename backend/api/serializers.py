@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from rest_framework import serializers, validators
+from rest_framework import serializers
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 
@@ -27,21 +27,24 @@ User = get_user_model()
 
 
 class TagsSerializer(serializers.ModelSerializer):
+    '''Сериализатор для тегов'''
+
     class Meta:
         model = Tag
         fields = ('id', 'name', 'color', 'slug')
-        # lookup_field = 'slug'
 
 
 class IngredientsSerializer(serializers.ModelSerializer):
+    '''Сериализатор для ингредиентов'''
 
     class Meta:
         model = Ingredient
         fields = ('id', 'name', 'measurement_unit')
-        # lookup_field = 'name'
 
 
 class IngredientInRecipeSerializer(serializers.ModelSerializer):
+    '''Сериализатор для ингредиентов используемых в рецепте'''
+
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
@@ -54,6 +57,9 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientsWriteSerializer(serializers.ModelSerializer):
+    '''Вспомогательный сериализатор ингредиентов
+    для сериализатора RecipeWriteSerializer'''
+
     id = serializers.IntegerField(write_only=True)
     amount = serializers.IntegerField(write_only=True)
 
@@ -66,6 +72,8 @@ class RecipeIngredientsWriteSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
+    '''Базовый сериализатор рецептов'''
+
     image = Base64ImageField()
     tags = TagsSerializer(many=True, read_only=True)
 
@@ -73,7 +81,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         if not value:
             raise serializers.ValidationError(ERROR_MSG_NON_IMAGE)
         return value
-    
+
     class Meta:
         model = Recipe
         fields = (
@@ -85,6 +93,8 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeReadSerializer(RecipeSerializer):
+    '''Сериализатор для чтения рецептов'''
+
     author = UserSerializer()
     ingredients = serializers.SerializerMethodField(
         method_name='get_ingredients'
@@ -121,6 +131,8 @@ class RecipeReadSerializer(RecipeSerializer):
 
 
 class RecipeWriteSerializer(RecipeSerializer):
+    '''Сериализатор для создания и изменения рецептов'''
+
     ingredients = RecipeIngredientsWriteSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(),
@@ -140,7 +152,7 @@ class RecipeWriteSerializer(RecipeSerializer):
             if int(item['amount']) < 1:
                 raise serializers.ValidationError(ERROR_MSG_ZERO_AMOUNT_INGR)
         return value
-    
+
     def validate_tags(self, value):
         if not value:
             raise serializers.ValidationError(ERROR_MSG_EMPTY_TAG)
@@ -198,6 +210,8 @@ class RecipeWriteSerializer(RecipeSerializer):
 
 
 class RecipeCutSerializer(RecipeReadSerializer):
+    '''Сериализатор для чтения рецептов (сокращенный)'''
+
     class Meta(RecipeReadSerializer.Meta):
         fields = (
             'id',

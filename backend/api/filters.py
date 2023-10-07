@@ -6,6 +6,13 @@ from recipes.models import Recipe, Tag
 
 
 class RecipeFilterSet(FilterSet):
+    '''
+    Фильтр для рецептов.
+
+    Доступна фильтрация по тегам, автору, добавлению в избранное,
+    добавлению в список покупок.
+    '''
+
     tags = filters.ModelMultipleChoiceFilter(
         field_name='tags__slug',
         to_field_name='slug',
@@ -22,10 +29,6 @@ class RecipeFilterSet(FilterSet):
         method='filter_is_in_shopping_cart'
     )
 
-    class Meta:
-        model = Recipe
-        fields = ('tags', 'author',)
-
     def filter_is_favorited(self, queryset, name, value):
         user = self.request.user
         if not user.is_anonymous and value:
@@ -39,3 +42,7 @@ class RecipeFilterSet(FilterSet):
             recipes = user.buyer.values('recipe')
             return queryset.filter(id__in=recipes)
         return queryset
+
+    class Meta:
+        model = Recipe
+        fields = ('tags', 'author',)

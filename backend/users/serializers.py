@@ -11,6 +11,8 @@ from api.serializers import RecipeCutSerializer
 
 
 class CustomUserSerializer(UserSerializer):
+    '''Переопределенный сериализатор пользователя.'''
+
     is_subscribed = serializers.SerializerMethodField(
         method_name='get_is_subscribed'
     )
@@ -33,6 +35,8 @@ class CustomUserSerializer(UserSerializer):
 
 
 class FollowSerializer(CustomUserSerializer):
+    '''Сериализатор подписок на автора.'''
+
     recipes = serializers.SerializerMethodField(
         method_name='get_recipes'
     )

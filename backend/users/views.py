@@ -4,21 +4,19 @@ from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.permissions import (
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly
-)
+from rest_framework.permissions import IsAuthenticated
 
 from api.pagination import CustomPagination
 from .errors_msg import ERROR_MSG_DELETE_FOLLOW
 from .models import Follow
 from .serializers import FollowSerializer
 
-
 User = get_user_model()
 
 
 class CustomUserViewSet(UserViewSet):
+    '''Переопределенное представление пользователя.'''
+
     pagination_class = CustomPagination
 
     def get_permissions(self):
@@ -31,6 +29,8 @@ class CustomUserViewSet(UserViewSet):
         methods=['post', 'delete']
     )
     def subscribe(self, request, id):
+        '''Action для подписки/отписки на автора.'''
+
         user = self.request.user
         author = get_object_or_404(User, id=id)
         if request.method == 'POST':
@@ -52,7 +52,7 @@ class CustomUserViewSet(UserViewSet):
         else:
             return Response(
                 {'errors': ERROR_MSG_DELETE_FOLLOW},
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_400_BAD_REQUEST
             )
 
     @action(
@@ -60,6 +60,8 @@ class CustomUserViewSet(UserViewSet):
         methods=['get']
     )
     def subscriptions(self, request):
+        '''Action для вывода списка подписок на авторов.'''
+
         user = self.request.user
         authors_id = user.follower.values('following')
         authors = User.objects.filter(id__in=authors_id)

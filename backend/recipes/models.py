@@ -12,6 +12,8 @@ NAME_LENGHT = 200
 
 
 class Recipe(models.Model):
+    '''Модель рецепта.'''
+
     author = models.ForeignKey(
         User,
         verbose_name='Автор публикации',
@@ -55,6 +57,8 @@ class Recipe(models.Model):
 
 
 class Tag(models.Model):
+    '''Модель тега.'''
+
     name = models.CharField(
         verbose_name='Название',
         max_length=NAME_LENGHT,
@@ -79,10 +83,11 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
+    '''Модель ингредиента.'''
+
     name = models.CharField(
         verbose_name='Название',
-        max_length=NAME_LENGHT,
-        # unique=True
+        max_length=NAME_LENGHT
     )
     measurement_unit = models.CharField(
         verbose_name='Единица измерения',
@@ -98,6 +103,8 @@ class Ingredient(models.Model):
 
 
 class IngredientInRecipe(models.Model):
+    '''Связанная модель ингредиентов в рецепте.'''
+
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE
@@ -128,6 +135,8 @@ class IngredientInRecipe(models.Model):
 
 
 class Favourites(models.Model):
+    '''Модель избранного.'''
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -151,6 +160,8 @@ class Favourites(models.Model):
 
 
 class ShoppingCart(models.Model):
+    '''Модель списка покупок.'''
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
