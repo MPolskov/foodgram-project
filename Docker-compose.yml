@@ -30,7 +30,7 @@ services:
     build: ./nginx/
     env_file: .env
     ports:
-      - 9090:80
+      - 80:80
     volumes:
       - ./docs/:/usr/share/nginx/html/api/docs/
       - static:/var/static
