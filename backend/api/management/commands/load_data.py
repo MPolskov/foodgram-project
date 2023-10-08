@@ -56,7 +56,7 @@ class Command(BaseCommand):
             if (model in exclude_models and column in exclude_fields):
                 continue
             field = model._meta.get_field(column)
-            if type(field) == related.ForeignKey:
+            if isinstance(field, related.ForeignKey):
                 rel_item = field.related_model.objects.get(pk=value)
                 row[column] = rel_item
 
