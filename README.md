@@ -24,6 +24,7 @@ git clone git@github.com:MPolskov/foodgram-project-react.git
 ```
 cd foodgram-project-react
 ```
+Cоздать .env файл в корневой папке проекта (пример содержания в .env.example) 
 
 Выполнить сборку Docker образов:
 ```
