@@ -62,7 +62,7 @@ class TagsViewSet(ReadOnlyModelViewSet):
 class RecipeViewSet(ModelViewSet):
     '''Класс представления для рецептов.'''
 
-    queryset = Recipe.objects.all()
+    queryset = Recipe.objects.all().prefetch_related('author', 'tags')
     permission_classes = (IsAuthorOrAdminOrReadOnly,)
     pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend,)
@@ -168,14 +168,16 @@ class RecipeViewSet(ModelViewSet):
             .values('ingredient')
             .annotate(amount=Sum('amount'))
         )
-        shopping_dict = {}
-        for item in ingredients_list:
-            obj = Ingredient.objects.get(id=item['ingredient'])
-            shopping_dict[obj.name] = (item['amount'], obj.measurement_unit)
+        id_amount_dict = {}
         result = f'Список покупок пользователя {request.user.username}\n'
-        for key, value in shopping_dict.items():
+        for item in ingredients_list:
+            id_amount_dict[item['ingredient']] = item['amount']
+        ingredients_id_list = list(id_amount_dict.keys())
+        ingredients = Ingredient.objects.filter(id__in=ingredients_id_list)
+        for key, value in id_amount_dict.items():
+            ingredient = ingredients.get(id=key)
             result += (
-                f'- {key}: {value[0]} {value[1]}\n'
+                f'- {ingredient.name}: {value} {ingredient.measurement_unit}\n'
             )
         response = HttpResponse(result, content_type="text/plain")
         response['Content-Disposition'] = (

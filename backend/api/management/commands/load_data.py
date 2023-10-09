@@ -25,6 +25,8 @@ class Command(BaseCommand):
     MODELS = {
         Ingredient: {'filename': 'ingredients.csv', 'short': 'i'},
     }
+    EXCLUDE_MODELS = (IngredientInRecipe,)
+    EXCLUDE_FIELDS = ('ingredient_id', 'recipe_id',)
 
     def add_arguments(self, parser):
         self.args_list = ('all',)
@@ -49,16 +51,14 @@ class Command(BaseCommand):
     def get_rel_item(self, model, row):
         '''Извлечение объектов из связанных моделей.'''
 
-        exclude_models = (IngredientInRecipe,)
-        exclude_fields = ('ingredient_id', 'recipe_id',)
-
         for column, value in row.items():
-            if (model in exclude_models and column in exclude_fields):
+            if model in self.EXCLUDE_MODELS and column in self.EXCLUDE_FIELDS:
                 continue
             field = model._meta.get_field(column)
-            if isinstance(field, related.ForeignKey):
-                rel_item = field.related_model.objects.get(pk=value)
-                row[column] = rel_item
+            if not isinstance(field, related.ForeignKey):
+                continue
+            rel_item = field.related_model.objects.get(pk=value)
+            row[column] = rel_item
 
     def load_csv(self, model, filename):
         '''Загрузка объектов из .csv файла.'''
@@ -76,11 +76,11 @@ class Command(BaseCommand):
             model.objects.bulk_create(objects)
 
     def handle(self, *args, **options):
-        if True in (options[key] for key in self.args_list):
+        if any(options[key] for key in self.args_list):
             for model, params in self.MODELS.items():
                 filename = params['filename']
                 if options[model._meta.model_name] or options['all']:
-                    if model.objects.all().count() > 0:
+                    if model.objects.count() > 0:
                         logger.warning(MSG_SKIP.format(model.__name__))
                         continue
                     try:

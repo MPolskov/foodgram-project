@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
@@ -20,7 +19,9 @@ from .errors_msg import (
     ERROR_MSG_ZERO_AMOUNT_INGR,
     ERROR_MSG_DUB_TAG,
     ERROR_MSG_NON_IMAGE,
-    ERROR_MSG_EMPTY
+    ERROR_MSG_EMPTY,
+    ERROR_MSG_EMPTY_TIME,
+    ERROR_MSG_MIN_TIME
 )
 
 User = get_user_model()
@@ -161,15 +162,21 @@ class RecipeWriteSerializer(RecipeSerializer):
             raise serializers.ValidationError(ERROR_MSG_DUB_TAG)
         return value
 
+    def validate_cooking_time(self, value):
+        if not value:
+            raise serializers.ValidationError(ERROR_MSG_EMPTY_TIME)
+        if value < 1:
+            raise serializers.ValidationError(ERROR_MSG_MIN_TIME)
+        return value
+
     def _add_ingredients_in_recipe(self, ingredients, recipe):
-        for item in ingredients:
-            amount = item['amount']
-            ingredient = get_object_or_404(Ingredient, id=item['id'])
-            IngredientInRecipe.objects.create(
-                ingredient=ingredient,
+        IngredientInRecipe.objects.bulk_create(
+            [IngredientInRecipe(
+                ingredient_id=item['id'],
                 recipe=recipe,
-                amount=amount
-            )
+                amount=item['amount']
+            ) for item in ingredients]
+        )
 
     def create(self, validated_data):
         author = self.context.get('request').user
