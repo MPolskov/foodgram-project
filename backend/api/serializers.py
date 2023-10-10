@@ -143,12 +143,12 @@ class RecipeWriteSerializer(RecipeSerializer):
     def validate_ingredients(self, value):
         if not value:
             raise serializers.ValidationError(ERROR_MSG_EMPTY_INGR)
-        ingredients = set([item['id'] for item in value])
-        if len(ingredients) < len(value):
+        ingredients_id = set([item['id'] for item in value])
+        if len(ingredients_id) < len(value):
             raise serializers.ValidationError(ERROR_MSG_DUB_INGR)
+        ingredients = Ingredient.objects.filter(id__in=ingredients_id)
         for item in value:
-            ingredient = Ingredient.objects.filter(id=item['id'])
-            if not ingredient.exists():
+            if not ingredients.filter(id=item['id']).exists():
                 raise serializers.ValidationError(ERROR_MSG_NON_EXISTING_INGR)
             if int(item['amount']) < 1:
                 raise serializers.ValidationError(ERROR_MSG_ZERO_AMOUNT_INGR)

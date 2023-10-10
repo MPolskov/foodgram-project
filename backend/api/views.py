@@ -62,7 +62,7 @@ class TagsViewSet(ReadOnlyModelViewSet):
 class RecipeViewSet(ModelViewSet):
     '''Класс представления для рецептов.'''
 
-    queryset = Recipe.objects.all().prefetch_related('author', 'tags')
+    queryset = Recipe.objects.prefetch_related('author', 'tags')
     permission_classes = (IsAuthorOrAdminOrReadOnly,)
     pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend,)

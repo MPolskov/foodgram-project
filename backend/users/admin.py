@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+from rest_framework.authtoken.models import TokenProxy
 
 from .models import Follow
 
@@ -19,3 +21,5 @@ class UserAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Follow)
+admin.site.unregister(TokenProxy)
+admin.site.unregister(Group)
