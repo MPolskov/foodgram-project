@@ -16,8 +16,19 @@ class UserAdmin(admin.ModelAdmin):
         'email',
         'first_name',
         'last_name',
+        'followers',
+        'recipes'
     )
     list_filter = ('email', 'username')
+    readonly_fields = ('followers', 'recipes')
+
+    @admin.display(description='Подписчики')
+    def followers(self, obj):
+        return obj.following.count()
+
+    @admin.display(description='Рецепты')
+    def recipes(self, obj):
+        return obj.recipe.count()
 
 
 admin.site.register(Follow)

@@ -161,7 +161,7 @@ class RecipeViewSet(ModelViewSet):
         '''Action для скачивания ингредиентов из списка покупок.'''
 
         shopping_cart = request.user.buyer.all()
-        recipes = [obj.recipe.id for obj in shopping_cart]
+        recipes = [obj.recipe_id for obj in shopping_cart]
         ingredients_list = (
             IngredientInRecipe.objects
             .filter(recipe__in=recipes)

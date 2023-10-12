@@ -17,10 +17,12 @@ User = get_user_model()
 class CustomUserViewSet(UserViewSet):
     '''Переопределенное представление пользователя.'''
 
+    ACTIONS_AUTH = ('me', 'subscribe', 'subscriptions')
+
     pagination_class = CustomPagination
 
     def get_permissions(self):
-        if self.action in ['me', 'subscribe', 'subscriptions']:
+        if self.action in self.ACTIONS_AUTH:
             self.permission_classes = (IsAuthenticated,)
         return super().get_permissions()
 
