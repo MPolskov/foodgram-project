@@ -26,9 +26,13 @@ cd foodgram-project-react
 ```
 Cоздать .env файл в корневой папке проекта (пример содержания в .env.example) 
 
-Выполнить сборку Docker образов:
+Выполнить сборку Docker образов и применить миграции:
 ```
+# Сборка образов:
 docker compose up
+
+# Миграции:
+docker compose exec backend python manage.py migrate
 ```
 Список ингредиентов можно загрузить из csv коммандой:
 ```
@@ -44,14 +48,6 @@ sudo docker compose -f docker-compose.production.yml exec backend python manage.
 # сборка статики backend:
 sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --no-input
 ```
-
-## Размещение учебного проекта: 
-
-https://mpolsh-foodgram.ddns.net/recipes
-
-Данные для входа суперпользователя:
-email: super@user.ru
-password: admin
 
 ### Автор
 Полшков Михаил
